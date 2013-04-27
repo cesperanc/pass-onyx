@@ -1,0 +1,18 @@
+{
+    "name": "c3/onyx",
+    "description": "ONYX project from the course Advanced Programming of Systems and Services",
+    "license": "GPL v3",
+    "keywords": [
+        "framework",
+        "zf2",
+        "doctrine",
+        "orm",
+        "onyx"
+    ],
+    "homepage": "http://dei.estg.ipleiria.pt",
+    "require": {
+        "php": ">=5.3.3",
+        "zendframework/zendframework": ">2.1.3",
+        "doctrine/doctrine-orm-module": "0.*"
+    }
+}
