@@ -135,7 +135,7 @@ class EntityGenerator
     /**
      * @var boolean
      */
-    private $fieldVisibility = 'private';
+    private $fieldVisibility = 'public';
 
     /**
      * Hash-map for handle types
