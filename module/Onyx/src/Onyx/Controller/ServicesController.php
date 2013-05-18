@@ -23,7 +23,7 @@ namespace Onyx\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\Soap\AutoDiscover;
-use Zend\Soap\Wsdl\ComplexTypeStrategy\ArrayOfTypeComplex;
+use Onyx\Service\SoapDoctrineArrayOfTypeComplex;
 
 class ServicesController extends AbstractActionController {    
 
@@ -66,7 +66,7 @@ class ServicesController extends AbstractActionController {
         $soapURL = sprintf('%s://%s%s', $uri->getScheme(), $uri->getHost(), dirname($uri->getPath()));
             
         $autodiscover = new AutoDiscover();
-        $autodiscover->setComplexTypeStrategy(new ArrayOfTypeComplex());
+        $autodiscover->setComplexTypeStrategy(new SoapDoctrineArrayOfTypeComplex());
         $autodiscover->setClass('Onyx\Service\Soap');
         
         //$autodiscover->setBindingStyle(array('style' => 'document'));
