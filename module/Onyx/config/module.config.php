@@ -32,6 +32,65 @@ return array(
                     ),
                 ),
             ),
+            'services' => array(
+                'type' => 'Literal',
+                'options' => array(
+                    'route'    => '/services',
+                    'defaults' => array(
+                        '__NAMESPACE__' => 'Onyx\Controller',
+                        'controller'    => 'Services',
+                        'action'        => 'soap',
+                    ),
+                ),
+                'may_terminate' => true,
+                'child_routes' => array(
+                    'default' => array(
+                        'type'    => 'Segment',
+                        'options' => array(
+                            'route'    => '[/:action]',
+                            'constraints' => array(
+                                'controller' => 'Onyx\Controller\Services',
+                                'action'     => '[a-zA-Z][a-zA-Z0-9_-]*',
+                            ),
+                            'defaults' => array(
+                                '__NAMESPACE__' => 'Onyx\Controller',
+                                'controller'    => 'Services',
+                                'action'        => 'soap',
+                            ),
+                        ),
+                    ),
+                    'wsdl' => array(
+                        'type'    => 'Literal',
+                        'options' => array(
+                            'route'    => '/soap/wsdl',
+                            'constraints' => array(
+                                'controller' => 'Onyx\Controller\Services',
+                                'action'     => 'wsdl',
+                            ),
+                            'defaults' => array(
+                                '__NAMESPACE__' => 'Onyx\Controller',
+                                'controller'    => 'Services',
+                                'action'        => 'wsdl',
+                            ),
+                        ),
+                    ),
+                    'xsl' => array(
+                        'type'    => 'Literal',
+                        'options' => array(
+                            'route'    => '/soap/xsl',
+                            'constraints' => array(
+                                'controller' => 'Onyx\Controller\Services',
+                                'action'     => 'xsl',
+                            ),
+                            'defaults' => array(
+                                '__NAMESPACE__' => 'Onyx\Controller',
+                                'controller'    => 'Services',
+                                'action'        => 'xsl',
+                            ),
+                        ),
+                    ),
+                ),
+            ),
             // The following is a route to simplify getting started creating
             // new controllers and actions without needing to create a new
             // module. Simply drop new controllers in, and you can access them
@@ -67,7 +126,7 @@ return array(
     'service_manager' => array(
         'factories' => array(
             'translator' => 'Zend\I18n\Translator\TranslatorServiceFactory',
-        ),
+        )
     ),
     'translator' => array(
         'locale' => 'en_US',
@@ -81,7 +140,8 @@ return array(
     ),
     'controllers' => array(
         'invokables' => array(
-            'Onyx\Controller\Index' => 'Onyx\Controller\IndexController'
+            'Onyx\Controller\Index' => 'Onyx\Controller\IndexController',
+            'Onyx\Controller\Services' => 'Onyx\Controller\ServicesController'
         ),
     ),
     'view_manager' => array(
@@ -92,7 +152,7 @@ return array(
         'exception_template'       => 'error/index',
         'template_map' => array(
             'layout/layout'           => __DIR__ . '/../view/layout/layout.phtml',
-            'onyx/index/index' => __DIR__ . '/../view/onyx/index/index.phtml',
+            'onyx/index/index'        => __DIR__ . '/../view/onyx/index/index.phtml',
             'error/404'               => __DIR__ . '/../view/error/404.phtml',
             'error/index'             => __DIR__ . '/../view/error/index.phtml',
         ),

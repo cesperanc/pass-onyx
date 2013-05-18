@@ -23,24 +23,44 @@ namespace Onyx\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
-use Doctrine\ORM\EntityManager;
 
 class IndexController extends AbstractActionController {
-
+    
     public function indexAction() {
-        return new ViewModel();
+        
+        $result = "";
+        $client = new \SoapClient("http://localhost/onyx/public/services/wsdl", array('cache_wsdl' => 0));
+        $result.=("<pre>".print_r($client->__getFunctions(), true)."</pre>");
+        
+        
+        /*
+        // Authentication with SOAP Header
+        $client->__setSoapHeaders(new \SoapHeader('http://localhost/onyx/public/services/soap', 'authenticate', array(new \SoapVar(array(
+            'username'=>'pass',
+            'password'=>'pass'
+        ), SOAP_ENC_OBJECT)), false));
+        $users = $client->getUsers();
+        
+        */
+        
+        // Authentication with session ID
+        if(session_start()):
+            $result.="<pre>Local session started</pre>";
+        endif;
+        if(!empty($_SESSION["serverId"])):
+            $session_id = $_SESSION["serverId"];
+        else:
+            $session_id = $_SESSION["serverId"] = $client->authenticate(array(
+                'username'=>'pass',
+                'password'=>'pass'
+            ));
+        endif;
+        $result.=("<pre>Using session mode with the remote session ID ".$session_id."</pre>");
+        $users = $client->getUsers($session_id);
+        
+        
+        $result.=("<pre>users:".print_r($users, true)."</pre>");
+        
+        return new ViewModel(array('result' => $result));
     }
-
-    /**
-     * @var Doctrine\ORM\EntityManager
-     */
-    protected $em;
-
-    public function getEntityManager() {
-        if (null === $this->em) {
-            $this->em = $this->getServiceLocator()->get('doctrine.entitymanager.orm_default');
-        }
-        return $this->em;
-    }
-
 }
