@@ -19,7 +19,7 @@ return array(
                 'params' => array(
                     'host'     => 'localhost',
                     'port'     => '3306',
-                    'dbname'   => 'wtf_db',
+                    'dbname'   => 'CETSSDB',
                 )
             )
         )
