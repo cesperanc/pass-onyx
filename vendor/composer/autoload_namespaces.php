@@ -6,14 +6,14 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Zend\\' => $vendorDir . '/zendframework/zendframework/library',
-    'ZendTest\\' => $vendorDir . '/zendframework/zendframework/tests',
-    'Symfony\\Component\\Console\\' => $vendorDir . '/symfony/console',
-    'Doctrine\\ORM' => $vendorDir . '/doctrine/orm/lib',
-    'Doctrine\\DBAL' => $vendorDir . '/doctrine/dbal/lib',
-    'Doctrine\\Common' => $vendorDir . '/doctrine/common/lib',
-    'DoctrineORMModule\\' => $vendorDir . '/doctrine/doctrine-orm-module/src',
-    'DoctrineORMModuleTest\\' => $vendorDir . '/doctrine/doctrine-orm-module/tests',
-    'DoctrineModule\\' => $vendorDir . '/doctrine/doctrine-module/src',
-    'DoctrineModuleTest\\' => $vendorDir . '/doctrine/doctrine-module/tests',
+    'Zend\\' => array($vendorDir . '/zendframework/zendframework/library'),
+    'ZendTest\\' => array($vendorDir . '/zendframework/zendframework/tests'),
+    'Symfony\\Component\\Console\\' => array($vendorDir . '/symfony/console'),
+    'Doctrine\\ORM' => array($vendorDir . '/doctrine/orm/lib'),
+    'Doctrine\\DBAL' => array($vendorDir . '/doctrine/dbal/lib'),
+    'Doctrine\\Common' => array($vendorDir . '/doctrine/common/lib'),
+    'DoctrineORMModule\\' => array($vendorDir . '/doctrine/doctrine-orm-module/src'),
+    'DoctrineORMModuleTest\\' => array($vendorDir . '/doctrine/doctrine-orm-module/tests'),
+    'DoctrineModule\\' => array($vendorDir . '/doctrine/doctrine-module/src'),
+    'DoctrineModuleTest\\' => array($vendorDir . '/doctrine/doctrine-module/tests'),
 );

@@ -12,3 +12,6 @@ nbproject
 composer.lock
 composer.phar
 vendor/bin
+/module/Onyx/src/Onyx/Entity/
+/data/
+/.htaccess
