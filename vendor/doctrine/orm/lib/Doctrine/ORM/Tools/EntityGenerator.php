@@ -134,8 +134,8 @@ class EntityGenerator
 
     /**
      * @var boolean
-     */
-    private $fieldVisibility = 'private';
+     *///C3 fix for webservice visibility
+    private $fieldVisibility = 'public';
 
     /**
      * Hash-map for handle types
