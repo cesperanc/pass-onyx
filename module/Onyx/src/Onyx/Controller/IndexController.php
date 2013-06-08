@@ -29,17 +29,17 @@ class IndexController extends AbstractActionController {
     public function indexAction() {
         
         $result = "";
-        $client = new \SoapClient("http://localhost/onyx/public/services/wsdl", array('cache_wsdl' => 0));
+        $client = new \SoapClient("http://localhost/onyx/services/wsdl", array('cache_wsdl' => 0));
         $result.=("<pre>".print_r($client->__getFunctions(), true)."</pre>");
         
         
         /*
         // Authentication with SOAP Header
-        $client->__setSoapHeaders(new \SoapHeader('http://localhost/onyx/public/services/soap', 'authenticate', array(new \SoapVar(array(
+        $client->__setSoapHeaders(new \SoapHeader('http://localhost/onyx/services/soap', 'authenticate', array(new \SoapVar(array(
             'username'=>'pass',
             'password'=>'pass'
         ), SOAP_ENC_OBJECT)), false));
-        $users = $client->getUsers();
+        $users = $client->getTeacherByFin($fin);
         
         */
         
@@ -56,10 +56,23 @@ class IndexController extends AbstractActionController {
             ));
         endif;
         $result.=("<pre>Using session mode with the remote session ID ".$session_id."</pre>");
-        $users = $client->getUsers($session_id);
+        
+        $fin = "183254481";
+        
+        $teacher = $client->getTeacherByFin($fin, $session_id);
+        if(is_null($teacher)):
+            $teacher = new \stdClass;
+            $teacher->nif=$fin;
+            $teacher->nome="Cláudio Esperança";
+        endif;
+        $teacher->email="cesperanc@gmail.com";
+        $client->updateTeacher($teacher, $session_id);
+        $teacher = $client->getTeacherByFin($fin, $session_id);
+        $result.=("<pre>teacher:".print_r($teacher, true)."</pre>");
         
         
-        $result.=("<pre>users:".print_r($users, true)."</pre>");
+        //$client->deleteTeacher($teacher, $session_id);
+        
         
         return new ViewModel(array('result' => $result));
     }

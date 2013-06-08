@@ -33,7 +33,7 @@ class Soap{
     private function verifyAuthentication($sessionId=NULL){
         if(!empty($sessionId)):
             session_id($sessionId);
-            if(session_start()):
+            if(((function_exists("session_status") && session_status() !== PHP_SESSION_ACTIVE) || session_id() === "") && session_start()):
                 if(isset($_SESSION[self::SESSION_AUTHENTICATED_FIELD])):
                     $this->authenticatedUser = $_SESSION[self::SESSION_AUTHENTICATED_FIELD];
                 endif;
@@ -43,7 +43,50 @@ class Soap{
             throw new \SoapFault("Failed to authenticate. The request must be authenticated with a soap header to authenticate the request.", 412);
         endif;
     }
-
+    
+    /**
+     * Verifies the entity manager presence
+     * 
+     * @throws \SoapFault if no entity manager was found
+     */
+    private function verifyEntityManager(){
+        if(is_null($this->em)):
+            throw new \SoapFault("No entity manager found.", 500);
+        endif;
+    }
+    
+    /**
+     * Copy the properties from an object to another
+     * 
+     * @param object $origin
+     * @param object $destination
+     * @return object $destination
+     */
+    private static function copyProperties($origin, $destination){
+        foreach($origin as $property => $value):
+            $destination->$property = $value;
+        endforeach;
+        return $destination;
+    }
+    
+    /**
+     * Create a QueryBuilder with the data from $dataObject
+     * 
+     * @param string $entity with the entity name reference
+     * @param object $dataObject with the entity data to copy
+     * @param string $prefix with the prefix for the fields
+     * @return QueryBuilder instance
+     */
+    private function createQbFromObject($entity, $dataObject, $prefix=NULL){
+        $qb = $this->em->createQueryBuilder();
+        $qb->update($entity, $prefix);
+        foreach($dataObject as $property=>$value):
+            if(isset($value)):
+                $qb->set((!empty($prefix)?"{$prefix}.":'').$property, $qb->expr()->literal($value));
+            endif;
+        endforeach;
+        return $qb;
+    }
 
     /**
      * Authenticates the SOAP request. 
@@ -68,22 +111,102 @@ class Soap{
             throw new \SOAPFault("Invalid username and password format. Values may not be empty and are case-sensitive.", 400);
         endif;
     }
-
-
+    
     /**
-     * Get all the users in the database
+     * Get a teacher by Fiscal Identification Number
+     * 
+     * @param string $fin with the Fiscal Identification Number
+     * @param string $sessionId with the optional session ID from the authenticate method
+     * @return Onyx\Entity\Docentes
      * 
      * @uses Onyx\Service\Soap::authenticate to authenticate the request
-     * @param string $sessionId with the optional session ID from the authenticate method
-     * @return Onyx\Entity\UsersTbl[]
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for tentity manager
      */
-    public function getUsers($sessionId=""){
+    public function getTeacherByFin($fin, $sessionId=""){
         $this->verifyAuthentication($sessionId);
+        $this->verifyEntityManager();
         
-        if(is_null($this->em)):
-            throw new \SoapFault("No entity manager found.", 500);
+        return $this->em->getRepository("Onyx\Entity\Docentes")->findOneBy(array('nif' => $fin));
+    }
+    
+    /**
+     * Check if a teacher exists by Fiscal Identification Number
+     * 
+     * @param Onyx\Entity\Docentes $teacher with the teacher to check
+     * @param string $sessionId with the optional session ID from the authenticate method
+     * @return boolean true if it exists, false otherwise
+     * 
+     * @uses Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for tentity manager
+     */
+    public function teacherExists($teacher, $sessionId=""){
+        return (!is_null($this->getTeacherByFin($teacher->nif, $sessionId)));
+    }
+    
+    /**
+     * Insert a new teacher based on their FIN
+     * 
+     * @param Onyx\Entity\Docentes $teacher with the teacher data to insert
+     * @param string $sessionId with the optional session ID from the authenticate method
+     * @return boolean true if the operation was successfuly terminated, false otherwise
+     * 
+     * @uses Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for tentity manager
+     */
+    public function insertTeacher($teacher, $sessionId=""){
+        return $this->updateTeacher($teacher, $sessionId);
+    }
+    
+    /**
+     * Update a teacher data based on their FIN
+     * 
+     * @param Onyx\Entity\Docentes $teacher with the teacher data to update
+     * @param string $sessionId with the optional session ID from the authenticate method
+     * @return boolean true if the operation was successfuly terminated, false otherwise
+     * 
+     * @uses Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for tentity manager
+     */
+    public function updateTeacher($teacher, $sessionId=""){
+        $this->verifyAuthentication($sessionId);
+        $this->verifyEntityManager();
+        
+        if(!$this->teacherExists($teacher, $sessionId)):
+            // Insert
+            $teacher = self::copyProperties($teacher, new \Onyx\Entity\Docentes());
+            $this->em->persist($teacher);
+            $this->em->flush();
+            return $this->teacherExists($teacher, $sessionId);
+            
+        else:
+            // Update
+            $qb = $this->createQbFromObject('Onyx\Entity\Docentes', $teacher, 'd');
+            $qb->where('d.nif = :identifier')->setParameter('identifier', $teacher->nif);
+            return $qb->getQuery()->execute();
         endif;
+        return false;
+    }
+    
+    /**
+     * Deletes a teacher based on their FIN
+     * 
+     * @param Onyx\Entity\Docentes $teacher with the teacher data to delete
+     * @param string $sessionId with the optional session ID from the authenticate method
+     * @return boolean true if the operation was successfuly terminated, false otherwise
+     * 
+     * @uses Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for tentity manager
+     */
+    public function deleteTeacher($teacher, $sessionId=""){
+        $this->verifyAuthentication($sessionId);
+        $this->verifyEntityManager();
         
-        return $this->em->getRepository("Onyx\Entity\UsersTbl")->findAll();
+        if($this->teacherExists($teacher, $sessionId)):
+            // Delete
+            $qb = $this->em->createQueryBuilder()->delete('Onyx\Entity\Docentes', 'd');
+            $qb->where('d.nif = :identifier')->setParameter('identifier', $teacher->nif);
+            return $qb->getQuery()->execute();
+        endif;
+        return true;
     }
 }
