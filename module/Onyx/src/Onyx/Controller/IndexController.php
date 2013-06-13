@@ -25,8 +25,24 @@ use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 
 class IndexController extends AbstractActionController {
+
+    /**
+     * @var \Doctrine\ORM\EntityManager
+     */
+    protected $em;
+    
+    /**
+     * @return Doctrine\ORM\EntityManager with the doctrine entity manager
+     */
+    public function getEntityManager() {
+        if (null === $this->em) {
+            $this->em = $this->getServiceLocator()->get('doctrine.entitymanager.orm_default');
+        }
+        return $this->em;
+    }
     
     public function indexAction() {
+        error_reporting(E_ALL | ~E_NOTICE);
         
         $result = "";
         $client = new \SoapClient("http://localhost/onyx/services/wsdl", array('cache_wsdl' => 0));
@@ -70,9 +86,19 @@ class IndexController extends AbstractActionController {
         $teacher = $client->getTeacherByFin($fin, $session_id);
         $result.=("<pre>teacher:".print_r($teacher, true)."</pre>");
         
-        
         //$client->deleteTeacher($teacher, $session_id);
+
+        /*
+        $fces = $client->getFutureCoursesEditions($session_id);
+        $result.=("<pre>getFutureCoursesEditions:".print_r($fces, true)."</pre>");
         
+        foreach ($fces as $course):
+            $result.=("<pre>getCourseCurricularUnits:".print_r($course->codplanocursofk, true)."</pre>");
+            $result.=("<pre>getCourseCurricularUnits ({$course->codplanocursofk->codplanocurso}):".print_r($client->getCourseCurricularUnits($course->codplanocursofk, $session_id), true)."</pre>");
+            
+            break;
+        endforeach;
+        */
         
         return new ViewModel(array('result' => $result));
     }

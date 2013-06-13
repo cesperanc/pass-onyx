@@ -17,12 +17,13 @@ class Soap{
     private $authenticatedUser=NULL;
 
     /**
-     * @var Doctrine\ORM\EntityManager
+     * @var \Doctrine\ORM\EntityManager
      */
     protected $em;
 
     public function __construct($em=NULL) {
         $this->em = $em;
+        //$this->em->getConnection()->getConfiguration()->setSQLLogger(new \Doctrine\DBAL\Logging\DebugStack());
     }
     
     /**
@@ -120,7 +121,7 @@ class Soap{
      * @return Onyx\Entity\Docentes
      * 
      * @uses Onyx\Service\Soap::authenticate to authenticate the request
-     * @uses Onyx\Service\Soap::verifyEntityManager to check for tentity manager
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
      */
     public function getTeacherByFin($fin, $sessionId=""){
         $this->verifyAuthentication($sessionId);
@@ -137,7 +138,7 @@ class Soap{
      * @return boolean true if it exists, false otherwise
      * 
      * @uses Onyx\Service\Soap::authenticate to authenticate the request
-     * @uses Onyx\Service\Soap::verifyEntityManager to check for tentity manager
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
      */
     public function teacherExists($teacher, $sessionId=""){
         return (!is_null($this->getTeacherByFin($teacher->nif, $sessionId)));
@@ -151,7 +152,7 @@ class Soap{
      * @return boolean true if the operation was successfuly terminated, false otherwise
      * 
      * @uses Onyx\Service\Soap::authenticate to authenticate the request
-     * @uses Onyx\Service\Soap::verifyEntityManager to check for tentity manager
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
      */
     public function insertTeacher($teacher, $sessionId=""){
         return $this->updateTeacher($teacher, $sessionId);
@@ -165,7 +166,7 @@ class Soap{
      * @return boolean true if the operation was successfuly terminated, false otherwise
      * 
      * @uses Onyx\Service\Soap::authenticate to authenticate the request
-     * @uses Onyx\Service\Soap::verifyEntityManager to check for tentity manager
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
      */
     public function updateTeacher($teacher, $sessionId=""){
         $this->verifyAuthentication($sessionId);
@@ -195,7 +196,7 @@ class Soap{
      * @return boolean true if the operation was successfuly terminated, false otherwise
      * 
      * @uses Onyx\Service\Soap::authenticate to authenticate the request
-     * @uses Onyx\Service\Soap::verifyEntityManager to check for tentity manager
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
      */
     public function deleteTeacher($teacher, $sessionId=""){
         $this->verifyAuthentication($sessionId);
@@ -209,4 +210,65 @@ class Soap{
         endif;
         return true;
     }
+    
+    /**
+     * Get future course editions based on the current date
+     * 
+     * @param string $sessionId with the optional session ID from the authenticate method
+     * @return Onyx\Entity\Edicaocursosemestreletivo[]
+     * 
+     * @uses Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
+     */
+    public function getFutureCoursesEditions($sessionId=""){
+        $this->verifyAuthentication($sessionId);
+        $this->verifyEntityManager();
+        
+        try{
+            
+            $result = $this->em->createQueryBuilder()->select('ecsl')
+            ->from('Onyx\Entity\Edicaocursosemestreletivo', 'ecsl')
+            ->where('ecsl.datainicio > CURRENT_DATE()')
+            ->getQuery()
+            ->setFetchMode('Onyx\Entity\Edicaocursosemestreletivo', 'codplanocursofk', \Doctrine\ORM\Mapping\ClassMetadataInfo::FETCH_EAGER)
+            ->setFetchMode('Onyx\Entity\Edicaocursosemestreletivo', 'iddiretorcursoedicaofk', \Doctrine\ORM\Mapping\ClassMetadataInfo::FETCH_EAGER)
+            ->execute();
+            
+            return $result;
+        } catch (Exception $e){
+            throw new \SOAPFault("Error occurred ".$e, 500);
+        }
+        
+        return array();
+    }
+    
+    /**
+     * Get the curricular units associated with an course
+     * 
+     * @param \Onyx\Entity\Planocurso $course with the codplanocurso with curricular units associated with
+     * @param string $sessionId with the optional session ID from the authenticate method
+     * @return Onyx\Entity\Planounidcurr[]
+     * 
+     * @uses Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
+     */
+    public function getCourseCurricularUnits($course, $sessionId=""){
+        $this->verifyAuthentication($sessionId);
+        $this->verifyEntityManager();
+        
+        try{
+            return $this->em->createQueryBuilder()->select('puc')
+            ->from('Onyx\Entity\Planounidcurr', 'puc')
+            ->where('puc.codplanocursofk = :identifier')
+            ->setParameter('identifier', $course->codplanocurso)
+            ->getQuery()->execute();
+            
+        } catch (Exception $e){
+            throw new \SOAPFault("Error occurred".$e, 500);
+        }
+        
+        return array();
+    }
 }
+
+  

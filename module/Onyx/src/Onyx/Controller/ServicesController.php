@@ -33,7 +33,7 @@ class ServicesController extends AbstractActionController {
     protected $em;
     
     /**
-     * @return Doctrine\ORM\EntityManager with the doctrine entity manager
+     * @return \Doctrine\ORM\EntityManager with the doctrine entity manager
      */
     public function getEntityManager() {
         if (null === $this->em) {
