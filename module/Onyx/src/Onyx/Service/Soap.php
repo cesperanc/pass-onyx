@@ -29,9 +29,10 @@ class Soap{
     /**
      * Verifies the authentication
      * 
+     * @param string $sessionId With the session ID to validate
      * @throws \SoapFault if the request was not authenticated
      */
-    private function verifyAuthentication($sessionId=NULL){
+    public function verifyAuthentication($sessionId=NULL){
         if(!empty($sessionId)):
             session_id($sessionId);
             if(((function_exists("session_status") && session_status() !== PHP_SESSION_ACTIVE) || session_id() === "") && session_start()):
@@ -76,7 +77,7 @@ class Soap{
      * @param string $entity with the entity name reference
      * @param object $dataObject with the entity data to copy
      * @param string $prefix with the prefix for the fields
-     * @return QueryBuilder instance
+     * @return \Doctrine\ORM\QueryBuilder instance
      */
     private function createQbFromObject($entity, $dataObject, $prefix=NULL){
         $qb = $this->em->createQueryBuilder();
@@ -92,7 +93,7 @@ class Soap{
     /**
      * Authenticates the SOAP request. 
      *
-     * @param Onyx\Service\SoapAuthentication
+     * @param \Onyx\Service\SoapAuthentication
      * @return string with the session ID
      */
     public function authenticate($login){
@@ -118,10 +119,10 @@ class Soap{
      * 
      * @param string $fin with the Fiscal Identification Number
      * @param string $sessionId with the optional session ID from the authenticate method
-     * @return Onyx\Entity\Docentes
+     * @return \Onyx\Entity\Docentes
      * 
-     * @uses Onyx\Service\Soap::authenticate to authenticate the request
-     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
+     * @uses \Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses \Onyx\Service\Soap::verifyEntityManager to check for entity manager
      */
     public function getTeacherByFin($fin, $sessionId=""){
         $this->verifyAuthentication($sessionId);
@@ -133,12 +134,12 @@ class Soap{
     /**
      * Check if a teacher exists by Fiscal Identification Number
      * 
-     * @param Onyx\Entity\Docentes $teacher with the teacher to check
+     * @param \Onyx\Entity\Docentes $teacher with the teacher to check
      * @param string $sessionId with the optional session ID from the authenticate method
      * @return boolean true if it exists, false otherwise
      * 
-     * @uses Onyx\Service\Soap::authenticate to authenticate the request
-     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
+     * @uses \Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses \Onyx\Service\Soap::verifyEntityManager to check for entity manager
      */
     public function teacherExists($teacher, $sessionId=""){
         return (!is_null($this->getTeacherByFin($teacher->nif, $sessionId)));
@@ -147,12 +148,12 @@ class Soap{
     /**
      * Insert a new teacher based on their FIN
      * 
-     * @param Onyx\Entity\Docentes $teacher with the teacher data to insert
+     * @param \Onyx\Entity\Docentes $teacher with the teacher data to insert
      * @param string $sessionId with the optional session ID from the authenticate method
      * @return boolean true if the operation was successfuly terminated, false otherwise
      * 
-     * @uses Onyx\Service\Soap::authenticate to authenticate the request
-     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
+     * @uses \Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses \Onyx\Service\Soap::verifyEntityManager to check for entity manager
      */
     public function insertTeacher($teacher, $sessionId=""){
         return $this->updateTeacher($teacher, $sessionId);
@@ -161,12 +162,12 @@ class Soap{
     /**
      * Update a teacher data based on their FIN
      * 
-     * @param Onyx\Entity\Docentes $teacher with the teacher data to update
+     * @param \Onyx\Entity\Docentes $teacher with the teacher data to update
      * @param string $sessionId with the optional session ID from the authenticate method
      * @return boolean true if the operation was successfuly terminated, false otherwise
      * 
-     * @uses Onyx\Service\Soap::authenticate to authenticate the request
-     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
+     * @uses \Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses \Onyx\Service\Soap::verifyEntityManager to check for entity manager
      */
     public function updateTeacher($teacher, $sessionId=""){
         $this->verifyAuthentication($sessionId);
@@ -191,12 +192,12 @@ class Soap{
     /**
      * Deletes a teacher based on their FIN
      * 
-     * @param Onyx\Entity\Docentes $teacher with the teacher data to delete
+     * @param \Onyx\Entity\Docentes $teacher with the teacher data to delete
      * @param string $sessionId with the optional session ID from the authenticate method
      * @return boolean true if the operation was successfuly terminated, false otherwise
      * 
-     * @uses Onyx\Service\Soap::authenticate to authenticate the request
-     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
+     * @uses \Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses \Onyx\Service\Soap::verifyEntityManager to check for entity manager
      */
     public function deleteTeacher($teacher, $sessionId=""){
         $this->verifyAuthentication($sessionId);
@@ -215,10 +216,10 @@ class Soap{
      * Get future course editions based on the current date
      * 
      * @param string $sessionId with the optional session ID from the authenticate method
-     * @return Onyx\Entity\Edicaocursosemestreletivo[]
+     * @return \Onyx\Entity\Edicaocursosemestreletivo[]
      * 
-     * @uses Onyx\Service\Soap::authenticate to authenticate the request
-     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
+     * @uses \Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses \Onyx\Service\Soap::verifyEntityManager to check for entity manager
      */
     public function getFutureCoursesEditions($sessionId=""){
         $this->verifyAuthentication($sessionId);
@@ -226,7 +227,9 @@ class Soap{
         
         try{
             
-            $result = $this->em->createQueryBuilder()->select('ecsl')
+            $result = $this->em->createQueryBuilder()
+            ->select('ecsl')
+            ->distinct()
             ->from('Onyx\Entity\Edicaocursosemestreletivo', 'ecsl')
             ->where('ecsl.datainicio > CURRENT_DATE()')
             ->getQuery()
@@ -243,14 +246,14 @@ class Soap{
     }
     
     /**
-     * Get the curricular units associated with an course
+     * Get the curricular units associated with a course
      * 
      * @param \Onyx\Entity\Planocurso $course with the codplanocurso with curricular units associated with
      * @param string $sessionId with the optional session ID from the authenticate method
-     * @return Onyx\Entity\Planounidcurr[]
+     * @return \Onyx\Entity\Planounidcurr[]
      * 
-     * @uses Onyx\Service\Soap::authenticate to authenticate the request
-     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
+     * @uses \Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses \Onyx\Service\Soap::verifyEntityManager to check for entity manager
      */
     public function getCourseCurricularUnits($course, $sessionId=""){
         $this->verifyAuthentication($sessionId);
@@ -261,7 +264,8 @@ class Soap{
             ->from('Onyx\Entity\Planounidcurr', 'puc')
             ->where('puc.codplanocursofk = :identifier')
             ->setParameter('identifier', $course->codplanocurso)
-            ->getQuery()->execute();
+            ->getQuery()
+            ->execute();
             
         } catch (Exception $e){
             throw new \SOAPFault("Error occurred".$e, 500);
@@ -269,6 +273,187 @@ class Soap{
         
         return array();
     }
+    
+    /**
+     * Get the curricular units associated with courses ids
+     * 
+     * @param \Onyx\Entity\Planocurso[] $coursesIds with an array of Planocurso with codplanocurso defined
+     * @param string $sessionId with the optional session ID from the authenticate method
+     * @return \Onyx\Entity\Planounidcurr[]
+     * 
+     * @uses \Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses \Onyx\Service\Soap::verifyEntityManager to check for entity manager
+     */
+    public function getCoursesCurricularUnits($courses, $sessionId=""){
+        $this->verifyAuthentication($sessionId);
+        $this->verifyEntityManager();
+        
+        $coursesIds = array();
+        foreach ($courses as $course):
+            $coursesIds[] = $course->codplanocurso;
+        endforeach;
+        
+        try{
+            return $this->em->createQueryBuilder()
+            ->select('puc')
+            ->from('Onyx\Entity\Planounidcurr', 'puc')
+            ->where('puc.codplanocursofk IN (:ids)')
+            ->orderBy('puc.nome', 'ASC')
+            ->setParameter('ids', $coursesIds)
+            ->getQuery()
+            ->setFetchMode('Onyx\Entity\Planounidcurr', 'codplanocursofk', \Doctrine\ORM\Mapping\ClassMetadataInfo::FETCH_EAGER)
+            ->execute();
+            
+        } catch (Exception $e){
+            throw new \SOAPFault("Error occurred".$e, 500);
+        }
+        
+        return array();
+    }
+    
+    /**
+     * Get the full data about the given curricular units associated with the given courses
+     * 
+     * @param \Onyx\Entity\Planounidcurr[] $courseCurricularUnits with an array of Planounidcurr with codplanocursofk->codplanocurso and codplanounidcurr defined
+     * @param string $sessionId with the optional session ID from the authenticate method
+     * @return \Onyx\Entity\Planounidcurr[]
+     * 
+     * @uses Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
+     */
+    public function getCurricularUnits($courseCurricularUnits, $sessionId=""){
+        $this->verifyAuthentication($sessionId);
+        $this->verifyEntityManager();
+        try{
+            $qb = $this->em->createQueryBuilder()
+            ->select('puc')
+            ->from('Onyx\Entity\Planounidcurr', 'puc')
+            ->orderBy('puc.nome', 'ASC');
+            
+            $i=0;
+            foreach ($courseCurricularUnits as $course):
+                if(isset($course->codplanocursofk) && isset($course->codplanocursofk->codplanocurso) && isset($course->codplanounidcurr)):
+                    if($i==0):
+                        $qb->where("(puc.codplanocursofk = :cpc{$i} AND puc.codplanounidcurr = :cpuc{$i})");
+                    else:
+                        $qb->orWhere("(puc.codplanocursofk = :cpc{$i} AND puc.codplanounidcurr = :cpuc{$i})");
+                    endif;
+                    $qb->setParameter("cpc{$i}", $course->codplanocursofk->codplanocurso);
+                    $qb->setParameter("cpuc{$i}", $course->codplanounidcurr);
+                    $i++;
+                endif;
+            endforeach;
+            
+            return $qb->getQuery()
+            ->setFetchMode('Onyx\Entity\Planounidcurr', 'codplanocursofk', \Doctrine\ORM\Mapping\ClassMetadataInfo::FETCH_EAGER)
+            ->execute();
+            
+        } catch (Exception $e){
+            throw new \SOAPFault("Error occurred".$e, 500);
+        }
+        
+        return array();
+    }
+    
+    /**
+     * Set the teacher for given curricular units associated with given courses
+     * 
+     * @param \Onyx\Entity\Edicaounidcurrdocentes[] $curricularUnits with an array of Planounidcurr with codplanocursofk->codplanocurso and codplanounidcurr defined
+     * @param string $fin with the Fiscal Identification Number
+     * @param string $sessionId with the optional session ID from the authenticate method
+     * @return boolean true on sucess, false otherwise
+     * 
+     * @uses Onyx\Service\Soap::authenticate to authenticate the request
+     * @uses Onyx\Service\Soap::verifyEntityManager to check for entity manager
+     */
+    public function setTeacherCurricularUnits($curricularUnits, $fin="", $sessionId=""){
+        
+        $this->verifyAuthentication($sessionId);
+        $this->verifyEntityManager();
+        try{
+            $result = true;
+
+            $conn = $this->em->getConnection();
+            foreach ($curricularUnits as $curricularUnit):
+                
+                // Get the teacher
+                $teacher = isset($curricularUnit->iddocentefk->iddocente)?$curricularUnit->iddocentefk->iddocente:"";
+                if(!empty($fin)):
+                    $teacher = $this->em->getRepository("Onyx\Entity\Docentes")->findOneBy(array('nif' => $fin));
+                    if(!is_null($teacher)):
+                        $teacher = $teacher->getIddocente();
+                    endif;
+                endif;
+                
+                // Check the data
+                if( empty($teacher) || 
+                    empty($curricularUnit) || 
+                    empty($curricularUnit->codplanocursofk2) || 
+                    empty($curricularUnit->codplanocursofk2->codplanocursofk) || 
+                    empty($curricularUnit->codplanocursofk2->codplanocursofk->codplanocurso) || 
+                    empty($curricularUnit->codplanounidcurrfk) || 
+                    empty($curricularUnit->codplanounidcurrfk->codplanounidcurr) || 
+                    empty($curricularUnit->anoletivofk) || 
+                    empty($curricularUnit->anoletivofk->anoletivo) || 
+                    empty($curricularUnit->semestrefk) || 
+                    empty($curricularUnit->semestrefk->semestre)
+                ):
+                    if($result):
+                        $result = false;
+                    endif;
+                    continue;
+                endif;
+
+                // Prepare the data
+                $courseId = $curricularUnit->codplanocursofk2->codplanocursofk->codplanocurso;
+                $curricularUnitId = $curricularUnit->codplanounidcurrfk->codplanounidcurr;
+                $year = $curricularUnit->anoletivofk->anoletivo;
+                $semester = $curricularUnit->semestrefk->semestre;
+                $percentage = "50"; // @ TODO: should be calculated here
+                $semesterHours = ""; // @ TODO: should be calculated here
+                $salary = ""; // @ TODO: should be calculated here
+                $textualSalaryValue = ""; // @ TODO: should be calculated here
+
+                // Check for similar data
+                $existant = $this->em->getRepository("Onyx\Entity\Edicaounidcurrdocentes")->findOneBy(array(
+                    'codplanocursofk2' => $courseId,
+                    'codplanounidcurrfk' => $curricularUnitId,
+                    'anoletivofk' => $year,
+                    'semestrefk' => $semester,
+                    'iddocentefk' => $teacher,
+                    'percentagemservdocfk' => $percentage
+                ));
+
+                // If none found, insert it on the database
+                if(is_null($existant)):
+                    if($conn->insert('edicaoUnidCurrDocentes', array(
+                    'codplanocursofk2' => $courseId,
+                    'codplanounidcurrfk' => $curricularUnitId,
+                    'anoletivofk' => $year,
+                    'semestrefk' => $semester,
+                    'iddocentefk' => $teacher,
+                    'percentagemservdocfk' => $percentage,
+                    'horassemestre' => $semesterHours,
+                    'vencimento' => $salary,
+                    'vencimentoextenso' => $textualSalaryValue
+                    ))==0):
+                        if($result):
+                            $result = false;
+                        endif;
+                    endif;
+                else:
+                    // Update if needed
+                endif;
+            endforeach;
+            
+            return $result;
+            
+        } catch (Exception $e){
+            throw new \SOAPFault("Error occurred".$e, 500);
+        }
+        
+        return false;
+    }
 }
 
-  
+

@@ -42,11 +42,10 @@ class IndexController extends AbstractActionController {
     }
     
     public function indexAction() {
-        error_reporting(E_ALL | ~E_NOTICE);
-        
         $result = "";
-        $client = new \SoapClient("http://localhost/onyx/services/wsdl", array('cache_wsdl' => 0));
-        $result.=("<pre>".print_r($client->__getFunctions(), true)."</pre>");
+        
+//$client = new \SoapClient("http://localhost/onyx/services/wsdl", array('cache_wsdl' => 0));
+//$result.=("<pre>".print_r($client->__getFunctions(), true)."</pre>");
         
         
         /*
@@ -60,20 +59,35 @@ class IndexController extends AbstractActionController {
         */
         
         // Authentication with session ID
-        if(session_start()):
-            $result.="<pre>Local session started</pre>";
-        endif;
-        if(!empty($_SESSION["serverId"])):
-            $session_id = $_SESSION["serverId"];
-        else:
-            $session_id = $_SESSION["serverId"] = $client->authenticate(array(
-                'username'=>'pass',
-                'password'=>'pass'
-            ));
-        endif;
-        $result.=("<pre>Using session mode with the remote session ID ".$session_id."</pre>");
+//if(session_start()):
+//    $result.="<pre>Local session started</pre>";
+//endif;
         
-        $fin = "183254481";
+        
+        $session_id = "";
+        /*
+        if(!empty($_SESSION["serverId"])):
+            try{
+                $client->verifyAuthentication($_SESSION["serverId"]);
+                $session_id = $_SESSION["serverId"];
+                die("bu");
+            }  catch (Exception $e){
+                
+            }
+        endif;
+         * 
+         */
+//if(empty($session_id)):
+//    $session_id = $_SESSION["serverId"] = $client->authenticate(array(
+//        'username'=>'pass',
+//        'password'=>'pass'
+//    ));
+//endif;
+//$result.=("<pre>Using session mode with the remote session ID ".$session_id."</pre>");
+//
+//
+//$fin = "183254481";
+        /*
         
         $teacher = $client->getTeacherByFin($fin, $session_id);
         if(is_null($teacher)):
@@ -85,19 +99,61 @@ class IndexController extends AbstractActionController {
         $client->updateTeacher($teacher, $session_id);
         $teacher = $client->getTeacherByFin($fin, $session_id);
         $result.=("<pre>teacher:".print_r($teacher, true)."</pre>");
-        
+        */
         //$client->deleteTeacher($teacher, $session_id);
 
         /*
         $fces = $client->getFutureCoursesEditions($session_id);
         $result.=("<pre>getFutureCoursesEditions:".print_r($fces, true)."</pre>");
-        
+        /*
         foreach ($fces as $course):
             $result.=("<pre>getCourseCurricularUnits:".print_r($course->codplanocursofk, true)."</pre>");
             $result.=("<pre>getCourseCurricularUnits ({$course->codplanocursofk->codplanocurso}):".print_r($client->getCourseCurricularUnits($course->codplanocursofk, $session_id), true)."</pre>");
             
             break;
         endforeach;
+        */
+        
+        /*
+        $fces = $client->getCoursesCurricularUnits(array(array(
+            'codplanocurso'=>'1'
+        ),array(
+            'codplanocurso'=>'481241'
+        )), $session_id);
+        $result.=("<pre>getCoursesCurricularUnits:".print_r($fces, true)."</pre>");
+        */
+        /*
+        $fces = $client->getCurricularUnits(array(array(
+            'codplanocursofk'=>array('codplanocurso'=>'1'),
+            'codplanounidcurr'=>'5062'
+        ),array(
+            'codplanocursofk'=>array('codplanocurso'=>'481241'),
+            'codplanounidcurr'=>'5063'
+        ),array(
+            'codplanocursofk'=>array('codplanocurso'=>'481241'),
+            'codplanounidcurr'=>'5062'
+        )), $session_id);
+        $result.=("<pre>getCurricularUnits:".print_r($fces, true)."</pre>");
+        */
+        
+        /*
+        $fces = $client->setTeacherCurricularUnits(array(array(
+            'codplanocursofk2'=>array('codplanocursofk'=>array('codplanocurso'=>'1')),
+            'codplanounidcurrfk'=>array('codplanounidcurr'=>'5062'),
+            'anoletivofk'=>array('anoletivo'=>'2013'),
+            'semestrefk'=>array('semestre'=>'1')
+        ),array(
+            'codplanocursofk2'=>array('codplanocursofk'=>array('codplanocurso'=>'481241')),
+            'codplanounidcurrfk'=>array('codplanounidcurr'=>'5063'),
+            'anoletivofk'=>array('anoletivo'=>'2013'),
+            'semestrefk'=>array('semestre'=>'1')
+        ),array(
+            'codplanocursofk2'=>array('codplanocursofk'=>array('codplanocurso'=>'481241')),
+            'codplanounidcurrfk'=>array('codplanounidcurr'=>'5062'),
+            'anoletivofk'=>array('anoletivo'=>'2013'),
+            'semestrefk'=>array('semestre'=>'1')
+        )), $fin, $session_id);
+        $result.=("<pre>setTeacherCurricularUnits:".print_r($fces, true)."</pre>");
         */
         
         return new ViewModel(array('result' => $result));
